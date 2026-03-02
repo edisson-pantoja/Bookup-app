@@ -6,12 +6,8 @@ import os
 import time
 
 # --- 1. CONFIGURAÇÃO DE SEGURANÇA E AMBIENTE ---
-# O código busca a chave nas variáveis de ambiente do sistema ou do Streamlit Secrets
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
-
-# Se estiver usando Streamlit Cloud, ele pode buscar em st.secrets
-if not GEMINI_API_KEY and "GEMINI_API_KEY" in st.secrets:
-    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+# A chave da API é lida das variáveis de ambiente, que é o método padrão no Vercel.
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # --- 2. CONFIGURAÇÃO DA UI (USER INTERFACE) ---
 st.set_page_config(page_title="CEO Knowledge Factory", page_icon="🏢", layout="centered")
@@ -50,7 +46,7 @@ def gerar_bloco_estrategico(model, nome_livro, autor_livro, tema, indice):
 # --- 4. FLUXO DE EXECUÇÃO ---
 if st.button("🚀 INICIAR EXTRAÇÃO DE ELITE"):
     if not GEMINI_API_KEY:
-        st.error("ERRO: Variável de ambiente 'GEMINI_API_KEY' não encontrada.")
+        st.error("ERRO: Variável de ambiente 'GEMINI_API_KEY' não encontrada. Verifique as configurações do seu projeto no Vercel.")
     elif not livro:
         st.warning("Por favor, forneça ao menos o título do livro.")
     else:
