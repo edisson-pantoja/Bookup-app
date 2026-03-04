@@ -24,7 +24,7 @@ HTML_TEMPLATE = '''
         h1 { font-size: 1.5rem; color: #1c1e21; }
         h2 { font-size: 1.1rem; color: #606770; margin-bottom: 2rem; }
         input[type="text"] { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #dddfe2; border-radius: 6px; font-size: 1rem; }
-        button { background-color: #1877f2; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; width: 100%; }
+        button { background-color: #1877f2; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color: 0.3s; width: 100%; }
         button:hover { background-color: #166fe5; }
         .info { background-color: #e7f3ff; border-left: 5px solid #1877f2; padding: 1rem; margin: 1.5rem 0; text-align: left; font-size: 0.9rem; border-radius: 6px; }
         .footer { margin-top: 2rem; font-size: 0.8rem; color: #8a8d91; }
@@ -83,7 +83,7 @@ def generate_dossier():
     
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel('gemini-pro')
         
         doc = Document()
         doc.add_heading(f'DOSSIÊ EXECUTIVO: {livro}', 0)
