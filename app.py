@@ -1,13 +1,13 @@
 
 from flask import Flask, request, render_template_string, send_file
-import google.generativeai as genai
+from openai import OpenAI
 from docx import Document
 from io import BytesIO
 import os
 
 # --- 1. CONFIGURAÇÃO DA APLICAÇÃO FLASK E API ---
 app = Flask(__name__)
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
 # --- 2. HTML DA INTERFACE (EMBUTIDO DIRETAMENTE) ---
 # Movido o HTML para dentro do Python para simplicidade, dispensando a pasta 'templates'.
@@ -51,7 +51,7 @@ HTML_TEMPLATE = '''
 '''
 
 # --- 3. A LÓGICA DE GERAÇÃO (O ALGORITMO) ---
-def gerar_bloco_estrategico(model, nome_livro, autor_livro, tema, indice):
+def gerar_bloco_estrategico(client, nome_livro, autor_livro, tema, indice):
     prompt = f'''
     [ROLE] Atue como uma Cientista Experimental e CEO Estrategista.
     [OBJETIVO] Escreva a PARTE {indice} de um Dossiê Técnico exaustivo sobre o livro '{nome_livro}' de '{autor_livro}'.
@@ -64,8 +64,15 @@ def gerar_bloco_estrategico(model, nome_livro, autor_livro, tema, indice):
     4. CONTEÚDO: Não resuma. Explique o 'Como' e o 'Porquê'. Conecte com EBITDA, cultura e escalabilidade.
     5. IDIOMA: Português, mantendo termos técnicos em Inglês entre parênteses.
     '''
-    response = model.generate_content(prompt)
-    return response.text
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": prompt},
+        ],
+        stream=False
+    )
+    return response.choices[0].message.content
 
 # --- 4. ROTAS DA APLICAÇÃO WEB ---
 @app.route('/')
@@ -78,12 +85,11 @@ def generate_dossier():
     livro = request.form['livro']
     autor = request.form['autor']
 
-    if not GEMINI_API_KEY:
-        return "ERRO: Variável de ambiente 'GEMINI_API_KEY' não configurada no Vercel.", 500
+    if not DEEPSEEK_API_KEY:
+        return "ERRO: Variável de ambiente 'DEEPSEEK_API_KEY' não configurada no Vercel.", 500
     
     try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com/v1")
         
         doc = Document()
         doc.add_heading(f'DOSSIÊ EXECUTIVO: {livro}', 0)
@@ -97,7 +103,7 @@ def generate_dossier():
         ]
         
         for i, tema in enumerate(blocos):
-            texto_bloco = gerar_bloco_estrategico(model, livro, autor, tema, i+1)
+            texto_bloco = gerar_bloco_estrategico(client, livro, autor, tema, i+1)
             doc.add_heading(f"Parte {i+1}: {tema}", level=1)
             doc.add_paragraph(texto_bloco)
             
