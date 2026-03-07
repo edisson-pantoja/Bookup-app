@@ -9,14 +9,14 @@ from openai import OpenAI
 app = Flask(__name__)
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
-# --- 2. TEMPLATE HTML COM LOGS DE DIAGNÓSTICO ---
+# --- 2. TEMPLATE HTML COM CÓDIGO FINAL E CORRIGIDO ---
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fábrica de Conhecimento CEO v4.1 (Diagnóstico Final)</title>
+    <title>Fábrica de Conhecimento CEO v5.0 (Final)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; color: #1c1e21; margin: 0; padding: 2rem; }
@@ -31,7 +31,7 @@ HTML_TEMPLATE = '''
         button:disabled { background-color: #dddfe2; color: #8a8d91; cursor: not-allowed; }
         .info { background-color: #e7f3ff; border-left: 5px solid #1877f2; padding: 1rem; margin: 1.5rem 0; text-align: left; font-size: 0.9rem; border-radius: 6px; }
         .footer { margin-top: 2rem; font-size: 0.8rem; color: #8a8d91; text-align: center; }
-        #results { margin-top: 2rem; padding: 1.5rem; border-radius: 8px; background-color: #fafafa; border: 1px solid #dddfe2; min-height: 50px; }
+        #results { margin-top: 2rem; padding: 1.5rem; border-radius: 8px; background-color: #fafafa; border: 1px solid #dddfe2; min-height: 50px; white-space: pre-wrap; }
         #pdf-button { background-color: #42b72a; margin-top: 1rem; display: none; } 
         #pdf-button:hover:not(:disabled) { background-color: #36a420; }
         .placeholder { color: #8a8d91; font-style: italic; }
@@ -60,42 +60,31 @@ HTML_TEMPLATE = '''
     </div>
 
     <script>
-        console.log("Script principal carregado.");
         let eventSource = null;
 
         function startGeneration() {
-            console.log("1. startGeneration() foi chamada.");
             const startButton = document.getElementById('start-button');
             const livroInput = document.getElementById('livro-input');
 
             if (!livroInput.value) {
-                console.log("   - Livro não preenchido. Exibindo alerta.");
                 alert("Por favor, insira o título do livro.");
                 return;
             }
 
-            console.log("2. Desativando o botão e mudando o texto.");
             startButton.disabled = true;
             startButton.textContent = 'Aguardando confirmação...';
 
             setTimeout(() => {
-                console.log("3. Dentro do setTimeout. Exibindo a confirmação.");
-                const userConfirmed = confirm("Você está prestes a iniciar a geração de um dossiê. Isso irá gerar custos com a API. Deseja continuar?");
-                console.log(`   - Usuário confirmou? ${userConfirmed}`);
-
-                if (!userConfirmed) {
-                    console.log("4a. Usuário cancelou. Restaurando o botão.");
+                if (!confirm("Você está prestes a iniciar a geração de um dossiê. Isso irá gerar custos com a API. Deseja continuar?")) {
                     startButton.disabled = false;
                     startButton.textContent = '🚀 INICIAR EXTRAÇÃO DE ELITE';
                     return;
                 }
-                console.log("4b. Usuário confirmou. Chamando startStreaming().");
                 startStreaming();
             }, 50); 
         }
 
         function startStreaming() {
-            console.log("5. startStreaming() foi chamada.");
             const startButton = document.getElementById('start-button');
             const pdfButton = document.getElementById('pdf-button');
             const resultsDiv = document.getElementById('results');
@@ -109,17 +98,14 @@ HTML_TEMPLATE = '''
             const livro = encodeURIComponent(livroInput.value);
             const autor = encodeURIComponent(autorInput.value);
             const streamURL = `/stream-generate?livro=${livro}&autor=${autor}`;
-            console.log(`6. Criando EventSource com a URL: ${streamURL}`);
             
             eventSource = new EventSource(streamURL);
             
             eventSource.onopen = function() {
-                console.log("7a. EventSource CONECTADO (onopen).");
                 updateResults('');
             };
 
             eventSource.onmessage = function(e) {
-                console.log("7b. EventSource MENSAGEM RECEBIDA (onmessage):", e.data);
                 const data = JSON.parse(e.data);
 
                 if (data.error) {
@@ -132,7 +118,7 @@ HTML_TEMPLATE = '''
                 }
                 
                 let currentContent = resultsDiv.innerHTML.replace(/<p class="placeholder">.*<\/p>/, "");
-                currentContent += `<h2>Parte ${data.indice}: ${data.tema}</h2><p>${data.texto_bloco.replace(/\n/g, '<br>')}</p><hr>`;
+                currentContent += `<h2>Parte ${data.indice}: ${data.tema}</h2><div>${data.texto_bloco}</div><hr>`;
                 
                 let blockCounter = data.indice + 1;
                 if (blockCounter <= 4) {
@@ -142,13 +128,11 @@ HTML_TEMPLATE = '''
             };
 
             eventSource.onerror = function(e) {
-                console.log("7c. EventSource ERRO (onerror).", e);
                 handleCompletion('<div class="final-status error"><b>Conexão perdida.</b> A geração foi interrompida.</div>', 'block', 'Tentar Novamente');
             };
         }
 
         function handleCompletion(message, pdfButtonDisplay, startButtonText) {
-            console.log(`8. handleCompletion() foi chamada com a mensagem: ${message}`);
             const startButton = document.getElementById('start-button');
             const pdfButton = document.getElementById('pdf-button');
             const resultsDiv = document.getElementById('results');
@@ -158,7 +142,6 @@ HTML_TEMPLATE = '''
             updateResults(finalContent);
 
             if (eventSource) {
-                console.log("   - Fechando a conexão EventSource.");
                 eventSource.close();
                 eventSource = null;
             }
@@ -173,7 +156,6 @@ HTML_TEMPLATE = '''
         }
 
         function generatePdf() {
-            console.log("Gerando PDF...");
             const resultsDiv = document.getElementById('results');
             const livro = document.getElementById('livro-input').value || "dossie";
             const clonedResults = resultsDiv.cloneNode(true);
@@ -205,11 +187,12 @@ def gerar_bloco_estrategico(client, nome_livro, autor_livro, tema, indice):
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that writes detailed technical content in Portuguese."},
+                {"role": "system", "content": "Você é um assistente prestativo que escreve conteúdo técnico detalhado em português."},
                 {"role": "user", "content": prompt}
             ],
             stream=False
         )
+        # A API retorna o texto com quebras de linha literais (\n), que serão preservadas
         return response.choices[0].message.content
     except Exception as e:
         return f"ERRO_API: {str(e)}"
@@ -248,6 +231,7 @@ def stream_generate():
                 yield f"data: {payload}\n\n"
                 break
             else:
+                # O JSON preserva as quebras de linha (\n). O CSS fará o trabalho de exibí-las.
                 payload = json.dumps({"indice": i + 1, "tema": tema, "texto_bloco": texto_bloco})
                 yield f"data: {payload}\n\n"
                 time.sleep(1)
