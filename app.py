@@ -35,17 +35,16 @@ HTML_TEMPLATE = '''
         #pdf-button { background-color: #42b72a; margin-top: 1rem; display: none; } 
         #pdf-button:hover { background-color: #36a420; }
         .placeholder { color: #8a8d91; }
-        .final-status { text-align: center; padding: 1rem; font-weight: bold; border-radius: 6px; }
+        .final-status { text-align: center; padding: 1rem; font-weight: bold; border-radius: 6px; margin-top: 1rem; }
         .success { color: #36a420; background-color: #eaf7e9; border: 1px solid #36a420; }
         .error { color: #fa383e; background-color: #feeef0; border: 1px solid #fa383e; }
     </style>
     <script>
-        function startGeneration(event) {
-            event.preventDefault();
+        function startGeneration() { // Removido o 'event' que não é mais necessário aqui
             const form = document.getElementById('generation-form');
             const livro = form.querySelector('input[name="livro"]').value;
             const autor = form.querySelector('input[name="autor"]').value;
-            const submitButton = form.querySelector('button');
+            const submitButton = form.querySelector('button[type="button"]');
             const resultsDiv = document.getElementById('results');
             const pdfButton = document.getElementById('pdf-button');
 
@@ -86,9 +85,7 @@ HTML_TEMPLATE = '''
                     return;
                 }
                 
-                // Adiciona o conteúdo do bloco
                 resultsDiv.innerHTML += `<h2>Parte ${data.indice}: ${data.tema}</h2>`;
-                // O texto vem com quebras de linha \n, trocamos por <br> para o HTML
                 resultsDiv.innerHTML += `<p>${data.texto_bloco.replace(/\n/g, '<br>')}</p><hr>`;
             };
 
@@ -119,13 +116,13 @@ HTML_TEMPLATE = '''
     <div class="container">
         <h1>🏭 Fábrica de Conhecimento CEO</h1>
         <h3>Transformando livros em Dossiês Estratégicos (Versão Streaming)</h3>
-        <form action="#" method="post" id="generation-form" onsubmit="startGeneration(event);">
+        <form id="generation-form">
             <input type="text" name="livro" placeholder="Título do Livro (Ex: Gestão de Alta Performance)" required>
             <input type="text" name="autor" placeholder="Autor (Ex: Andrew Grove)">
             <div class="info">
                 <strong>Estratégia:</strong> O Dossiê será gerado em 4 blocos, exibidos em tempo real logo abaixo.
             </div>
-            <button type="submit">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
+            <button type="button" onclick="startGeneration()">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
         </form>
 
         <div id="results">
@@ -212,7 +209,7 @@ def stream_generate():
             
             if "Erro ao contatar a API" in texto_bloco:
                 break 
-        else: # Este 'else' pertence ao 'for' e só executa se o loop terminar sem 'break'
+        else: 
             completion_message = json.dumps({"status": "complete", "message": "✅ Dossiê gerado completamente! Você já pode gerar o PDF."})
             yield f"data: {completion_message}\n\n"
 
