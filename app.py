@@ -9,14 +9,14 @@ from openai import OpenAI
 app = Flask(__name__)
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
-# --- 2. TEMPLATE HTML COM JAVASCRIPT ROBUSTO E SIMPLIFICADO ---
+# --- 2. TEMPLATE HTML COM TESTE DE DIAGNÓSTICO ---
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fábrica de Conhecimento CEO v3.0</title>
+    <title>Fábrica de Conhecimento CEO v3.1 (Diagnóstico)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; color: #1c1e21; margin: 0; padding: 2rem; }
@@ -50,7 +50,8 @@ HTML_TEMPLATE = '''
             <input type="text" id="livro-input" placeholder="Título do Livro (Ex: Gestão de Alta Performance)" required>
             <input type="text" id="autor-input" placeholder="Autor (Ex: Andrew Grove)">
             <div class="info"><strong>Estratégia:</strong> O Dossiê será gerado em 4 blocos, exibidos em tempo real.</div>
-            <button type="button" id="start-button" onclick="startGeneration()">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
+            <!-- PASSO DE DIAGNÓSTICO: O onclick foi trocado por um alert simples -->
+            <button type="button" id="start-button" onclick="alert('TESTE DE DIAGNÓSTICO: O botão responde ao clique. Se esta mensagem apareceu, o problema está no script e não no cache.');">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
         </form>
 
         <div id="results"><p class="placeholder">O conteúdo do dossiê aparecerá aqui...</p></div>
@@ -59,6 +60,7 @@ HTML_TEMPLATE = '''
         <div class="footer">Desenvolvido para o Protocolo de Superpoder de Estudo CEO</div>
     </div>
 
+    <!-- O script abaixo permanece para quando o diagnóstico for concluído -->
     <script>
         let eventSource = null;
 
@@ -121,7 +123,7 @@ HTML_TEMPLATE = '''
                 
                 let currentContent = resultsDiv.innerHTML.replace(/<p class="placeholder">.*<\/p>/, "");
                 currentContent += `<h2>Parte ${data.indice}: ${data.tema}</h2>`;
-                currentContent += `<p>${data.texto_bloco.replace(/\n/g, '<br>')}</p><hr>`;
+                currentContent += `<p>${data.texto_bloco.replace(/\n/g, '\n')}</p><hr>`;
                 
                 blockCounter++;
                 if (blockCounter <= 4) {
