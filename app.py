@@ -9,14 +9,14 @@ from openai import OpenAI
 app = Flask(__name__)
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
-# --- 2. TEMPLATE HTML COM TESTE DE DIAGNÓSTICO ---
+# --- 2. TEMPLATE HTML COM LOGS DE DIAGNÓSTICO ---
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fábrica de Conhecimento CEO v3.1 (Diagnóstico)</title>
+    <title>Fábrica de Conhecimento CEO v4.1 (Diagnóstico Final)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; color: #1c1e21; margin: 0; padding: 2rem; }
@@ -50,8 +50,7 @@ HTML_TEMPLATE = '''
             <input type="text" id="livro-input" placeholder="Título do Livro (Ex: Gestão de Alta Performance)" required>
             <input type="text" id="autor-input" placeholder="Autor (Ex: Andrew Grove)">
             <div class="info"><strong>Estratégia:</strong> O Dossiê será gerado em 4 blocos, exibidos em tempo real.</div>
-            <!-- PASSO DE DIAGNÓSTICO: O onclick foi trocado por um alert simples -->
-            <button type="button" id="start-button" onclick="alert('TESTE DE DIAGNÓSTICO: O botão responde ao clique. Se esta mensagem apareceu, o problema está no script e não no cache.');">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
+            <button type="button" id="start-button" onclick="startGeneration()">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
         </form>
 
         <div id="results"><p class="placeholder">O conteúdo do dossiê aparecerá aqui...</p></div>
@@ -60,33 +59,43 @@ HTML_TEMPLATE = '''
         <div class="footer">Desenvolvido para o Protocolo de Superpoder de Estudo CEO</div>
     </div>
 
-    <!-- O script abaixo permanece para quando o diagnóstico for concluído -->
     <script>
+        console.log("Script principal carregado.");
         let eventSource = null;
 
         function startGeneration() {
+            console.log("1. startGeneration() foi chamada.");
             const startButton = document.getElementById('start-button');
             const livroInput = document.getElementById('livro-input');
 
             if (!livroInput.value) {
+                console.log("   - Livro não preenchido. Exibindo alerta.");
                 alert("Por favor, insira o título do livro.");
                 return;
             }
 
+            console.log("2. Desativando o botão e mudando o texto.");
             startButton.disabled = true;
             startButton.textContent = 'Aguardando confirmação...';
 
             setTimeout(() => {
-                if (!confirm("Você está prestes a iniciar a geração de um dossiê. Isso irá gerar custos com a API. Deseja continuar?")) {
+                console.log("3. Dentro do setTimeout. Exibindo a confirmação.");
+                const userConfirmed = confirm("Você está prestes a iniciar a geração de um dossiê. Isso irá gerar custos com a API. Deseja continuar?");
+                console.log(`   - Usuário confirmou? ${userConfirmed}`);
+
+                if (!userConfirmed) {
+                    console.log("4a. Usuário cancelou. Restaurando o botão.");
                     startButton.disabled = false;
                     startButton.textContent = '🚀 INICIAR EXTRAÇÃO DE ELITE';
                     return;
                 }
+                console.log("4b. Usuário confirmou. Chamando startStreaming().");
                 startStreaming();
             }, 50); 
         }
 
         function startStreaming() {
+            console.log("5. startStreaming() foi chamada.");
             const startButton = document.getElementById('start-button');
             const pdfButton = document.getElementById('pdf-button');
             const resultsDiv = document.getElementById('results');
@@ -99,33 +108,33 @@ HTML_TEMPLATE = '''
             
             const livro = encodeURIComponent(livroInput.value);
             const autor = encodeURIComponent(autorInput.value);
+            const streamURL = `/stream-generate?livro=${livro}&autor=${autor}`;
+            console.log(`6. Criando EventSource com a URL: ${streamURL}`);
             
-            eventSource = new EventSource(`/stream-generate?livro=${livro}&autor=${autor}`);
+            eventSource = new EventSource(streamURL);
             
-            let blockCounter = 1;
-
             eventSource.onopen = function() {
-                updateResults(''); // Limpa a área de resultados
+                console.log("7a. EventSource CONECTADO (onopen).");
+                updateResults('');
             };
 
             eventSource.onmessage = function(e) {
+                console.log("7b. EventSource MENSAGEM RECEBIDA (onmessage):", e.data);
                 const data = JSON.parse(e.data);
 
                 if (data.error) {
                     handleCompletion(`<div class="final-status error"><b>Erro:</b> ${data.error}</div>`, 'block', 'Tentar Novamente');
                     return;
                 }
-
                 if (data.status === 'complete') {
                     handleCompletion(`<div class="final-status success">${data.message}</div>`, 'block', '🚀 INICIAR NOVA EXTRAÇÃO');
                     return;
                 }
                 
                 let currentContent = resultsDiv.innerHTML.replace(/<p class="placeholder">.*<\/p>/, "");
-                currentContent += `<h2>Parte ${data.indice}: ${data.tema}</h2>`;
-                currentContent += `<p>${data.texto_bloco.replace(/\n/g, '\n')}</p><hr>`;
+                currentContent += `<h2>Parte ${data.indice}: ${data.tema}</h2><p>${data.texto_bloco.replace(/\n/g, '<br>')}</p><hr>`;
                 
-                blockCounter++;
+                let blockCounter = data.indice + 1;
                 if (blockCounter <= 4) {
                     currentContent += `<p class="placeholder">Aguardando Bloco ${blockCounter}...</p>`;
                 }
@@ -133,19 +142,23 @@ HTML_TEMPLATE = '''
             };
 
             eventSource.onerror = function(e) {
+                console.log("7c. EventSource ERRO (onerror).", e);
                 handleCompletion('<div class="final-status error"><b>Conexão perdida.</b> A geração foi interrompida.</div>', 'block', 'Tentar Novamente');
             };
         }
 
         function handleCompletion(message, pdfButtonDisplay, startButtonText) {
+            console.log(`8. handleCompletion() foi chamada com a mensagem: ${message}`);
             const startButton = document.getElementById('start-button');
             const pdfButton = document.getElementById('pdf-button');
+            const resultsDiv = document.getElementById('results');
             
             let finalContent = resultsDiv.innerHTML.replace(/<p class="placeholder">.*<\/p>/, "");
             finalContent += message;
             updateResults(finalContent);
 
             if (eventSource) {
+                console.log("   - Fechando a conexão EventSource.");
                 eventSource.close();
                 eventSource = null;
             }
@@ -160,17 +173,13 @@ HTML_TEMPLATE = '''
         }
 
         function generatePdf() {
+            console.log("Gerando PDF...");
             const resultsDiv = document.getElementById('results');
             const livro = document.getElementById('livro-input').value || "dossie";
             const clonedResults = resultsDiv.cloneNode(true);
             clonedResults.querySelectorAll('.placeholder, .final-status').forEach(el => el.remove());
 
-            const options = {
-                margin: 1, filename: `DOSSIE_${livro.replace(/ /g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
+            const options = { margin: 1, filename: `DOSSIE_${livro.replace(/ /g, '_')}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
             html2pdf().set(options).from(clonedResults).save();
         }
     </script>
