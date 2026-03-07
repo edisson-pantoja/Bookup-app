@@ -15,7 +15,7 @@ HTML_TEMPLATE = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fábrica de Conhecimento CEO v6.0 (Final)</title>
+    <title>Fábrica de Conhecimento CEO v6.1 (Final)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; color: #1c1e21; margin: 0; padding: 2rem; }
@@ -179,11 +179,12 @@ def gerar_bloco_estrategico(client, nome_livro, autor_livro, tema, indice):
     [OBJETIVO] Escreva a PARTE {indice} de um Dossiê Técnico exaustivo sobre o livro '{nome_livro}' de '{autor_livro}'.
     [FOCO DO BLOCO] {tema}.
     [DIRETRIZES TÉCNICAS]
-    1. TOM: Executivo, analítico e focado em governança de alto nível.
-    2. ESTRUTURA: Use parágrafos bem desenvolvidos. Não use markdown, apenas texto plano com quebras de linha.
-    3. CONTEÚDO: Não resuma. Explique o 'Como' e o 'Porquê'. Conecte com EBITDA, cultura e escalabilidade.
-    4. IDIOMA: Português, mantendo termos técnicos em Inglês entre parênteses.
-    5. FOCO: Gere apenas o texto do bloco solicitado, sem introduções ou conclusões sobre o processo de geração.
+    1. EXTENSÃO: Gere um texto com aproximadamente 3.000 palavras para este bloco.
+    2. TOM: Executivo, analítico e focado em governança de alto nível.
+    3. ESTRUTURA: Use parágrafos bem desenvolvidos. Não use markdown, apenas texto plano com quebras de linha.
+    4. CONTEÚDO: Não resuma. Explique o 'Como' e o 'Porquê'. Conecte com EBITDA, cultura e escalabilidade.
+    5. IDIOMA: Português, mantendo termos técnicos em Inglês entre parênteses.
+    6. FOCO: Gere apenas o texto do bloco solicitado, sem introduções ou conclusões sobre o processo de geração.
     '''
     try:
         response = client.chat.completions.create(
