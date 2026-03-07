@@ -38,7 +38,7 @@ HTML_TEMPLATE = '''
             <input type="text" name="livro" placeholder="Título do Livro (Ex: Gestão de Alta Performance)" required>
             <input type="text" name="autor" placeholder="Autor (Ex: Andrew Grove)">
             <div class="info">
-                <strong>Estratégia:</strong> Masterclass de 24.000 palavras dividida em 4 Blocos Ontológicos.
+                <strong>Estratégia:</strong> Masterclass de aproximadamente 6.000 palavras dividida em 4 Blocos Ontológicos.
             </div>
             <button type="submit">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
         </form>
@@ -58,7 +58,7 @@ def gerar_bloco_estrategico(client, nome_livro, autor_livro, tema, indice):
     [FOCO DO BLOCO] {tema}.
     
     [DIRETRIZES TÉCNICAS]
-    1. EXTENSÃO: Mínimo de 6.000 palavras para este bloco. Seja prolixo na profundidade técnica.
+    1. EXTENSÃO: Gere um texto com aproximadamente 1.500 palavras para este bloco.
     2. TOM: Executivo, analítico e focado em governança de alto nível.
     3. ESTRUTURA: Use títulos H2 e H3, listas de verificação, análise de causa e efeito e modelos mentais.
     4. CONTEÚDO: Não resuma. Explique o 'Como' e o 'Porquê'. Conecte com EBITDA, cultura e escalabilidade.
