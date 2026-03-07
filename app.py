@@ -26,25 +26,24 @@ HTML_TEMPLATE = '''
         h2 { font-size: 1.3rem; color: #1c1e21; margin-top: 1.5rem; border-bottom: 1px solid #dddfe2; padding-bottom: 0.5rem; }
         h3 { font-size: 1.1rem; color: #606770; margin-bottom: 2rem; text-align: center;}
         input[type="text"] { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #dddfe2; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
-        button { background-color: #1877f2; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s; width: 100%; }
+        button { background-color: #1877f2; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background-color 0.3s, color 0.3s; width: 100%; }
         button:hover:not(:disabled) { background-color: #166fe5; }
-        button:disabled { background-color: #a0bdf5; cursor: not-allowed; }
+        button:disabled { background-color: #dddfe2; color: #8a8d91; cursor: not-allowed; }
         .info { background-color: #e7f3ff; border-left: 5px solid #1877f2; padding: 1rem; margin: 1.5rem 0; text-align: left; font-size: 0.9rem; border-radius: 6px; }
         .footer { margin-top: 2rem; font-size: 0.8rem; color: #8a8d91; text-align: center; }
         #results { margin-top: 2rem; padding: 1.5rem; border-radius: 8px; background-color: #fafafa; border: 1px solid #dddfe2; }
         #pdf-button { background-color: #42b72a; margin-top: 1rem; display: none; } 
-        #pdf-button:hover { background-color: #36a420; }
+        #pdf-button:hover:not(:disabled) { background-color: #36a420; }
         .placeholder { color: #8a8d91; }
         .final-status { text-align: center; padding: 1rem; font-weight: bold; border-radius: 6px; margin-top: 1rem; }
         .success { color: #36a420; background-color: #eaf7e9; border: 1px solid #36a420; }
         .error { color: #fa383e; background-color: #feeef0; border: 1px solid #fa383e; }
     </style>
     <script>
-        function startGeneration() { // Removido o 'event' que não é mais necessário aqui
+        function startGeneration(submitButton) {
             const form = document.getElementById('generation-form');
             const livro = form.querySelector('input[name="livro"]').value;
             const autor = form.querySelector('input[name="autor"]').value;
-            const submitButton = form.querySelector('button[type="button"]');
             const resultsDiv = document.getElementById('results');
             const pdfButton = document.getElementById('pdf-button');
 
@@ -52,18 +51,26 @@ HTML_TEMPLATE = '''
                 alert("Por favor, insira o título do livro.");
                 return;
             }
-            if (!confirm("Você está prestes a iniciar a geração de um dossiê, o que irá gerar custos com a API. Deseja continuar?")) {
+
+            // Fornece feedback IMEDIATO ao usuário
+            submitButton.disabled = true;
+            submitButton.textContent = 'Aguardando confirmação...';
+
+            if (!confirm("Você está prestes a iniciar a geração de um dossiê. Isso irá gerar custos com a API. Deseja continuar?")) {
+                // Usuário cancelou, restaura o botão
+                submitButton.disabled = false;
+                submitButton.textContent = '🚀 INICIAR EXTRAÇÃO DE ELITE';
                 return;
             }
 
-            submitButton.disabled = true;
+            // Usuário confirmou, começa a geração
             submitButton.textContent = 'Gerando... Por favor, aguarde.';
-            resultsDiv.innerHTML = '<p class="placeholder">Aguardando o primeiro bloco da IA...</p>';
+            resultsDiv.innerHTML = '<p class="placeholder">Conectando com a IA...</p>';
             pdfButton.style.display = 'none';
 
             const eventSource = new EventSource(`/stream-generate?livro=${encodeURIComponent(livro)}&autor=${encodeURIComponent(autor)}`);
             
-            resultsDiv.innerHTML = ""; // Limpa o placeholder inicial
+            resultsDiv.innerHTML = ""; // Limpa a área de resultados
 
             eventSource.onmessage = function(e) {
                 const data = JSON.parse(e.data);
@@ -72,7 +79,7 @@ HTML_TEMPLATE = '''
                     resultsDiv.innerHTML += `<div class="final-status error"><b>Erro:</b> ${data.error}</div>`;
                     eventSource.close();
                     submitButton.disabled = false;
-                    submitButton.textContent = '🚀 INICIAR EXTRAÇÃO DE ELITE';
+                    submitButton.textContent = 'Tentar Novamente';
                     return;
                 }
 
@@ -116,13 +123,13 @@ HTML_TEMPLATE = '''
     <div class="container">
         <h1>🏭 Fábrica de Conhecimento CEO</h1>
         <h3>Transformando livros em Dossiês Estratégicos (Versão Streaming)</h3>
-        <form id="generation-form">
+        <form id="generation-form" onsubmit="return false;"> 
             <input type="text" name="livro" placeholder="Título do Livro (Ex: Gestão de Alta Performance)" required>
             <input type="text" name="autor" placeholder="Autor (Ex: Andrew Grove)">
             <div class="info">
                 <strong>Estratégia:</strong> O Dossiê será gerado em 4 blocos, exibidos em tempo real logo abaixo.
             </div>
-            <button type="button" onclick="startGeneration()">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
+            <button type="button" onclick="startGeneration(this)">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
         </form>
 
         <div id="results">
