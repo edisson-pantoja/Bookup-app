@@ -10,7 +10,6 @@ app = Flask(__name__)
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
 # --- 2. HTML DA INTERFACE (EMBUTIDO DIRETAMENTE) ---
-# Movido o HTML para dentro do Python para simplicidade, dispensando a pasta 'templates'.
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -29,18 +28,35 @@ HTML_TEMPLATE = '''
         .info { background-color: #e7f3ff; border-left: 5px solid #1877f2; padding: 1rem; margin: 1.5rem 0; text-align: left; font-size: 0.9rem; border-radius: 6px; }
         .footer { margin-top: 2rem; font-size: 0.8rem; color: #8a8d91; }
     </style>
+    <script>
+        function confirmGeneration(event) {
+            event.preventDefault(); // Impede o envio imediato do formulário
+            const form = event.target.form;
+            const livro = form.querySelector('input[name="livro"]').value;
+            
+            if (!livro) {
+                alert("Por favor, insira o título do livro.");
+                return;
+            }
+
+            const confirmation = confirm("Você está prestes a iniciar a geração de um dossiê, o que irá gerar custos com a API. Deseja continuar?");
+            if (confirmation) {
+                form.submit();
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>🏭 Fábrica de Conhecimento CEO</h1>
         <h2>Transformando livros em Dossiês Estratégicos</h2>
-        <form action="/generate" method="post">
+        <form action="/generate" method="post" id="generation-form">
             <input type="text" name="livro" placeholder="Título do Livro (Ex: Gestão de Alta Performance)" required>
             <input type="text" name="autor" placeholder="Autor (Ex: Andrew Grove)">
             <div class="info">
                 <strong>Estratégia:</strong> Masterclass de aproximadamente 6.000 palavras dividida em 4 Blocos Ontológicos.
             </div>
-            <button type="submit">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
+            <button type="button" onclick="confirmGeneration(event)">🚀 INICIAR EXTRAÇÃO DE ELITE</button>
         </form>
         <div class="footer">
             Desenvolvido para o Protocolo de Superpoder de Estudo CEO
@@ -77,7 +93,6 @@ def gerar_bloco_estrategico(client, nome_livro, autor_livro, tema, indice):
 # --- 4. ROTAS DA APLICAÇÃO WEB ---
 @app.route('/')
 def index():
-    # Renderiza o HTML diretamente da string
     return render_template_string(HTML_TEMPLATE)
 
 @app.route('/generate', methods=['POST'])
@@ -107,14 +122,12 @@ def generate_dossier():
             doc.add_heading(f"Parte {i+1}: {tema}", level=1)
             doc.add_paragraph(texto_bloco)
             
-        # Salva o documento em um buffer de memória
         buffer = BytesIO()
         doc.save(buffer)
         buffer.seek(0)
         
         file_name = f"MASTERCLASS_{livro.replace(' ', '_')}.docx"
 
-        # Envia o arquivo para download
         return send_file(
             buffer,
             as_attachment=True,
@@ -125,7 +138,5 @@ def generate_dossier():
     except Exception as e:
         return f"Erro Crítico no Sistema durante a geração: {e}", 500
 
-# O Vercel gerencia a execução do app, então a linha abaixo não é estritamente necessária para o deploy,
-# mas é útil para testes locais (executando 'python app.py').
 if __name__ == "__main__":
     app.run(debug=True)
